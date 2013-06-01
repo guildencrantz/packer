@@ -728,14 +728,22 @@ if [[ $option = search || $option = searchinstall ]]; then
       results="$(pacman -Ssq -- "${packageargs[@]}")"
     else
       results="$(pacman -Ss -- "${packageargs[@]}")"
+      # Repo
       results="$(sed -r "s|^[^ ][^/]*/|$S${COLOR3}&$S${COLOR1}|" <<< "$results")"
+      # Package
       results="$(sed -r "s|^([^ ]+) ([^ ]+)(\s?\(.*\))?(\s?\[.*])?$|\1 $S${COLOR2}\2$S${COLOR5}\3$S${COLOR4}\4$S${ENDCOLOR}|" <<< "$results")"
+      # Group
+      results="$(sed -r "s|^([^ ]+ [^ ]+ \[.*\]) (\(.*\))(.*)$|\1 $S${COLOR5}\2$S${ENDCOLOR}\3|" <<< "$results")"
+      # Status
+      results="$(sed -r "s|^([^ ]+ [^ ]+ \[.*\].*) (\[.*\])$|\1 $S${COLOR4}\2$S${ENDCOLOR}|" <<< "$results")"
     fi
-    if [[ $option = search ]]; then
-      echo -e "$results" | fmt -"$_WIDTH" -s -p ' '
-    elif [[ $interactive ]]; then  # interactive
-      echo -e "$results" | fmt -"$_WIDTH" -s -p ' ' | nl -v 0 -w 1 -s ' ' -b 'p^[^ ]'
-    fi | sed '/^$/d'
+    if [ "$results" ]; then
+      if [[ $option = search ]]; then
+        echo -e "$results" | fmt -"$_WIDTH" -s -p ' '
+      elif [[ $interactive ]]; then  # interactive
+        echo -e "$results" | fmt -"$_WIDTH" -s -p ' ' | nl -v 0 -w 1 -s ' ' -b 'p^[^ ]'
+      fi | sed '/^$/d'
+    fi
     pacname=( $(pacman -Ssq -- "${packageargs[@]}") )
     pactotal="${#pacname[@]}"
   else
