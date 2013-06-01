@@ -88,6 +88,8 @@ usage() {
   echo '    --devel      - update devel packages during -Su'
   echo '    --skipinteg  - when using makepkg, do not check md5s'
   echo '    --preview    - edit pkgbuild before sourcing'
+  echo '    --builddir   - specify build directory'
+  echo '                   (default is /tmp/packerbuild-$UID/$pkgname)'
   echo '    --help       - outputs this message'
   exit
 }
@@ -316,7 +318,7 @@ confirm_edit() {
 
 # Installs packages from aur ($1 is package, $2 is dependency or explicit)
 aurinstall() {
-  dir="${TMPDIR:-/tmp}/packerbuild-$UID/$1"
+  dir="${builddir:-${TMPDIR:-/tmp}/packerbuild-$UID/$1}"
   sourcemakepkgconf
 
   # Prepare the installation directory
@@ -372,6 +374,7 @@ aurinstall() {
 # Goes through all of the install tests and execution ($@ is packages to be installed)
 installhandling() {
   packageargs=("$@")
+
   getignoredpackages
   sourcemakepkgconf
   # Figure out all of the packages that need to be installed
@@ -418,6 +421,10 @@ installhandling() {
 
   # First install the explicit pacman packages, let pacman prompt
   if [[ $pacmanpackages ]]; then
+    echo "install"
+    echo "packageargs '$@'"
+    echo "pacopts '${PACOPTS[@]}'"
+
     runasroot $PACMAN "${PACOPTS[@]}" -S -- "${pacmanpackages[@]}"
   fi
   if [[ -z $aurtargets ]]; then
@@ -452,7 +459,6 @@ installhandling() {
   done
 
   # Prompt for aur packages and their dependencies
-  echo
   if [[ $pacmandepends ]]; then
     IFS=$'\n' read -rd '' -a pacmandepends < \
       <(printf "%s\n" "${pacmandepends[@]}" | sort -u)
@@ -519,7 +525,7 @@ run_quick_check() {
   mkdir -p "$CHECKUPDATE_DB"
   ln -s "${DBPath}/local" "$CHECKUPDATE_DB" &> /dev/null
   fakeroot pacman -Sqy --dbpath "$CHECKUPDATE_DB" &> /dev/null
-  pacman -Qqu --dbpath "$CHECKUPDATE_DB" 2> /dev/null 
+  pacman -Qqu --dbpath "$CHECKUPDATE_DB" 2> /dev/null
 }
 
 # proceed with installation prompt
@@ -586,7 +592,8 @@ while [[ $1 ]]; do
     '--quickcheck') quickcheck='1' ;;
     '--devel') devel='1' ;;
     '--skipinteg') MAKEPKGOPTS="--skipinteg" ;;
-    '--preview') preview='1' ;;
+    '--notarball') notarball=1 ;;
+    '--builddir') builddir="$2"; shift ;;
     '--') shift ; packageargs+=("$@") ; break ;;
     -*)
       $PACMAN "$@"
@@ -700,6 +707,11 @@ if [[ $option = download ]]; then
       err "Package \`$package' does not exist on aur."
     fi
   done
+
+  if (( ${#builddir} )); then
+    [[ -d $builddir ]] || err "Directory $builddir not found."
+    cd "$builddir"
+  fi
 
   for package in "${pkglist[@]}"; do
     curl -Lfs "$(pkglink $package)" > "$package.tar.gz"

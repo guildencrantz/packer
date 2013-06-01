@@ -1,5 +1,5 @@
 pkgname=packer-guildencrantz-git
-pkgver=0.278.55926ee
+pkgver=0.280.71d98de
 pkgrel=1
 pkgdesc="Bash wrapper for pacman and the AUR"
 url="https://github.com/guildencrantz/packer"
