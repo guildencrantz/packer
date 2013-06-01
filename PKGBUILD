@@ -1,15 +1,15 @@
-pkgname=packer-gh-git
-pkgver=0.276.3c5169b
+pkgname=packer-guildencrantz-git
+pkgver=0.278.55926ee
 pkgrel=1
 pkgdesc="Bash wrapper for pacman and the AUR"
-url="https://github.com/gavinhungry/packer"
+url="https://github.com/guildencrantz/packer"
 license="GPL"
 arch=('any')
 makedepends=('git')
 depends=('grep' 'sed' 'bash' 'curl' 'pacman' 'jshon' 'sudo')
 conflicts=('packer')
 optdepends=('customizepkg: apply customizepkg modifications')
-source=("${pkgname}::git+https://github.com/gavinhungry/packer.git#branch=master")
+source=("${pkgname}::git+${url}.git#branch=master")
 md5sums=('SKIP')
 
 pkgver () {
